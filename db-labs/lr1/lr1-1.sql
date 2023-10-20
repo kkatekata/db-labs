@@ -1,1 +1,1 @@
-SELECT * FROM `world`.`city` WHERE Name LIKE 'C%';
+SELECT * FROM `world`.`city` WHERE Name LIKE 'A%';
