@@ -1,5 +1,5 @@
 /* Найдите дату последней регистрации члена клуба.*/
 USE cd;
-SELECT starttime FROM bookings
-ORDER BY starttime DESC
+SELECT joindate FROM members
+ORDER BY joindate DESC
 LIMIT 1;
