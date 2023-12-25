@@ -1,26 +1,24 @@
 /*Task-7-3. Напишите процедуру, которая считает окупаемость каждого объекта клуба на основании оплаты аренд за месяц. Применить ее к июлю 2012 года. 
 */
+
 USE cd;
 
 DELIMITER //
 
-DROP PROCEDURE IF EXISTS getPayback //
-CREATE PROCEDURE getPayback(whichDate DATE)
-    READS SQL DATA
-    NOT DETERMINISTIC
-BEGIN
-    SELECT
-        b.facid
-    ,   f.facility
-    ,   SUM(p.payment) - f.monthlymaintenance AS income
-    FROM bookings AS b
-    JOIN payments AS p ON b.bookid = p.bookid
-    JOIN facilities AS f ON b.facid = f.facid
-    WHERE DATE_FORMAT(starttime, '%y %m') = DATE_FORMAT(whichDate, '%y %m')
-    GROUP BY b.facid
-    ORDER BY b.facid;
-END //
+DROP PROCEDURE IF EXISTS income_of_all //
+CREATE PROCEDURE income_of_all(curfacid INT, m INT, y INT)
+  READS SQL DATA
+  NOT DETERMINISTIC
+  BEGIN
+    SELECT 
+        IF (SUM(p.payment) - f.monthlymaintenance = 0, 10000000000000,
+            f.initialoutlay / (SUM(p.payment) - f.monthlymaintenance)) AS income
+      FROM payments AS p
+        JOIN bookings AS b ON b.bookid = p.bookid
+        JOIN facilities AS f ON b.facid = f.facid
+      WHERE curfacid = b.facid AND
+        MONTH(starttime) = m AND YEAR(starttime) = y
+      GROUP BY b.facid;
+  END //
 
-DELIMITER ;
-
-CALL getPayback('2012-07-03');
+CALL income_of_all(4, MONTH('2012-07-03'), YEAR('2012-07-03'));
