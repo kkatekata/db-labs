@@ -13,27 +13,16 @@ USE cd;
 CREATE TABLE payments
 (
 	payid INT PRIMARY KEY AUTO_INCREMENT,
- bookid INT,
+  bookid INT,
 	payment DECIMAL,
-	FOREIGN KEY (bookid) REFERENCES bookings(bookid)
+	FOREIGN KEY (bookid) REFERENCES bookings(bookid) ON DELETE RESTRICT
 );
 
-Добавление столбца
+-- Добавление столбца
 ALTER TABLE bookings
 ADD payed BOOLEAN DEFAULT 0;
 
 DELIMITER //
-
--- Триггер на удаление записи, если не оплачена
-DROP TRIGGER IF EXISTS not_delete_if_false //
-CREATE TRIGGER not_delete_if_false
-  BEFORE DELETE ON bookings FOR EACH ROW 
-  BEGIN
-    CASE
-	    WHEN OLD.payed = 1 THEN SIGNAL SQLSTATE '45000' SET message_text='Аренда уже оплачена!';
-	    ELSE BEGIN END;
-    END CASE;
-  END //
 
 -- Триггер на изменение статуса оплаты
 DROP TRIGGER IF EXISTS on_pay_status //
@@ -43,8 +32,8 @@ CREATE TRIGGER on_pay_status
     CASE
       WHEN NEW.payed = OLD.payed THEN BEGIN END;
       WHEN NEW.payed = 1
-        THEN INSERT INTO payments(bookid, payment)
-              NEW.bookid, cost_of(NEW.memid, NEW.facid, NEW.slots)
+        THEN INSERT INTO payments(bookid, payment) VALUES
+              (NEW.bookid, cost_of(NEW.memid, NEW.facid, NEW.slots));
       ELSE DELETE FROM payments WHERE payments.bookid = NEW.bookid;
     END CASE;
   END //
@@ -56,8 +45,8 @@ CREATE TRIGGER on_insert
   BEGIN
     CASE
       WHEN NEW.payed = 1
-        THEN INSERT INTO payments(bookid, payment)
-              NEW.bookid, cost_of(NEW.memid, NEW.facid, NEW.slots)
+        THEN INSERT INTO payments(bookid, payment) VALUES
+              (NEW.bookid, cost_of(NEW.memid, NEW.facid, NEW.slots));
       ELSE BEGIN END;
     END CASE;
   END //
